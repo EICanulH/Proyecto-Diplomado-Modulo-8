@@ -597,9 +597,11 @@ map_dfr(seq(0.05, 0.6, by = 0.01), ~ metricas(prob_test, test$SEVERO, .x)) %>%
   tema +
   theme(legend.position = "top")
 
-## RESULTADOS CLAVE DEL MODELO
+# ------------------------------------------------------------------------------
+# RESULTADOS CLAVE DEL MODELO
+# ------------------------------------------------------------------------------
 
-### ¿Qué factores se relacionan con los accidentes con víctimas?
+## ¿Qué factores se relacionan con los accidentes con víctimas?
 
 nombres_vars <- c(TIPO = "Tipo de accidente", REGION = "Región", ZONA = "Zona", FRANJA_HORARIA = "Horario",
                   DIASEMANA = "Día de la semana", FESTIVO = "Día festivo", SEXO = "Sexo",
@@ -651,7 +653,7 @@ ors %>%
   tema +
   theme(legend.position = "top")
 
-### ¿Qué factores pesan más?
+## ¿Qué factores pesan más?
 
 # Importancia de cada variable (tarda uno o dos minutos)
 importancia <- drop1(modelo, test = "LRT") %>%
@@ -672,8 +674,9 @@ ggplot(importancia, aes(x = LRT, y = reorder(variable, LRT))) +
        x = NULL, y = NULL) +
   tema
 
-### ¿Qué aporta el modelo? Probabilidades para distintos escenarios
+## ¿Qué aporta el modelo? 
 
+# Probabilidades para distintos escenarios
 escenarios <- tibble(
   escenario = c("Perfil base", "+ con motocicleta", "+ de noche", "+ en domingo",
                 "+ conductor de 18 a 24 años", "+ con aliento alcohólico", "+ en zona suburbana"),
