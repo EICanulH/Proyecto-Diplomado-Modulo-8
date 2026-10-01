@@ -2,3 +2,4 @@
 *.Rproj
 *.code-workspace
 rsconnect/
+.Rhistory
