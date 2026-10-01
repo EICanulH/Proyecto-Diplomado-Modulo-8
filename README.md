@@ -1,8 +1,6 @@
 # Proyecto del Módulo 8
 
-Fuente de los datos: del INEGI. Se trabajo con el archivo , en particular con los datos de 2025.
-
-De acuerdo con la estadística [Accidentes de Tránsito Terrestre en Zonas Urbanas y Suburbanas (ATUS)](https://www.inegi.org.mx/programas/accidentes/#datos_abiertos), en particular el archivo **Accidentes de tránsito terrestre en zonas urbanas y suburbanas 1997-2025**, en 2025 el **17.8%** de los accidentes de tránsito registrados tuvo consecuencias directas sobre al menos una de las personas involucradas, ya sea en forma de lesiones o de fallecimientos.
+De acuerdo con la estadística [Accidentes de Tránsito Terrestre en Zonas Urbanas y Suburbanas (ATUS)](https://www.inegi.org.mx/programas/accidentes/#datos_abiertos), en particular el archivo **Accidentes de tránsito terrestre en zonas urbanas y suburbanas 1997-2025**, en **2025** el **17.8%** de los accidentes de tránsito registrados tuvo consecuencias directas sobre al menos una de las personas involucradas, ya sea en forma de lesiones o de fallecimientos.
 
 El presente análisis tiene como objetivo **identificar los factores asociados a la severidad de los accidentes de tránsito** causados por **conductores** mediante el desarrollo y comparación de modelos de clasificación supervisada, a partir de variables temporales, geográficas, contextuales del incidente y del conductor responsable, contenidas en la edición 2025 de la ATUS. Para ello, la severidad se define como una variable binaria que distingue entre los accidentes con al menos una persona lesionada o fallecida y aquellos que resultaron únicamente en daños materiales.
 
