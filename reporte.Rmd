@@ -285,11 +285,11 @@ escenarios$prob <- predict(modelo, newdata = escenarios, type = "response")
 
 # Resumen Ejecutivo
 
-De los 362,926 accidentes de tránsito en zonas urbanas y suburbanas de México registrados por el INEGI en 2025 cuya causa se atribuye al conductor, el 17.8% tuvo al menos una persona herida o fallecida. Para entender qué distingue a estos accidentes de los que solo dejan daños materiales (sin víctimas), ajustamos un modelo de regresión logística con variables del tipo de accidente, características del mommento del accidente y el conductor responsable.
+De los 362,926 accidentes de tránsito en zonas urbanas y suburbanas de México registrados por el INEGI en 2025 cuya causa se atribuye al conductor, el 17.8% tuvo al menos una persona herida o fallecida. Para entender qué distingue a estos accidentes de los que solo dejan daños materiales (sin víctimas), ajustamos un modelo de regresión logística con variables del tipo de accidente, características del momento del accidente y el conductor responsable.
 
 El tipo de accidente es, por mucho, el factor que más pesa: los atropellamientos y caídas de pasajeros siempre tienen víctimas, y los choques con ciclista, volcaduras y los choques con motocicleta incrementan en mayor medida el tener víctimas frente a un choque entre automóviles.
 
-Con un umbral de decisión de 0.2, el modelo identifica en el conjunto de prueba el 71.0% de los accidentes con víctimas (recall), con una precisión de 45.8%, una especifidad de 81.6% y un AUC de 0.829.
+Con un umbral de decisión de 0.2, el modelo identifica en el conjunto de prueba el 71.0% de los accidentes con víctimas (recall), con una precisión de 45.8%, una especificidad de 81.6% y un AUC de 0.829.
 
 # Problema y Contexto
 
@@ -420,7 +420,7 @@ Las siguientes variables registran el número de personas muertas o heridas seg�
 + `NEMUERTO` / `NEHERIDO`: Personas muertas y heridas cuyo rol no fue especificado.
 
 
-## Cálidad de los datos
+## Calidad de los datos
 
 + No hay `NA` explícitos, pero la falta de información viene codificada dentro de las variables: el valor 0 en `ID_EDAD` (el conductor se fugó), el 99 en `ID_EDAD` (edad no especificada) y la categoría "Se ignora" en `ALIENTO` y `CINTURON`. Estos casos los tratamos como faltantes al evaluar cada variable. En vez de eliminarlos o imputarlos, los conservamos como categorías propias: son una parte importante de los registros y que la información no se haya capturado puede estar relacionado con el tipo de accidente.
 
