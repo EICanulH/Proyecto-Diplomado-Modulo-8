@@ -10,7 +10,7 @@ En el script [analisis_completo.R](analisis_completo.R) se presenta todo el aná
 
 El script [preparar_datos.R](preparar_datos.R) contiene el procesamiento de los datos utilizados para el dashboard de shiny. Estos datos procesados se guardan en la carpeta [datos_dashboard](datos_dashboard). En esta misma carpeta se encuentra el archivo [mexico_estados.geojson](datos_dashboard\mexico_estados.geojson), el cual contiene los límites estatales creados por [amCharts](https://www.npmjs.com/package/@amcharts/amcharts4-geodata) y que fueron necesarios para graficar el mapa de la república.
 
-El dashboard se construye con el script [app.R](app.R). En este se presentan diversas visualizaciones descriptivas de los datos, así como los resultados y conclusiones obtenidos con el modelo. El dashboard esta hosteado en [Posit Connect Cloud](https://connect.posit.cloud/) y puede explorarse en este [link](https://eicanulh-accidentes-transito-proy-mod8.share.connect.posit.cloud/).
+El dashboard se construye con el script [app.R](app.R). En este se presentan diversas visualizaciones descriptivas de los datos, así como los resultados y conclusiones obtenidos con el modelo. El dashboard está hosteado en [Posit Connect Cloud](https://connect.posit.cloud/) y puede explorarse en este [link](https://eicanulh-accidentes-transito-proy-mod8.share.connect.posit.cloud/).
 
 El reporte completo puede consultarse en el documento [reporte.html](reporte.html), el cual fue renderizado a partir de [reporte.Rmd](reporte.Rmd).
 
