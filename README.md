@@ -12,6 +12,8 @@ El script [preparar_datos.R](preparar_datos.R) contiene el procesamiento de los 
 
 El dashboard se construye con el script [app.R](app.R). En este se presentan diversas visualizaciones descriptivas de los datos, así como los resultados y conclusiones obtenidos con el modelo. El dashboard esta hosteado en [Posit Connect Cloud](https://connect.posit.cloud/) y puede explorarse en este [link](https://eicanulh-accidentes-transito-proy-mod8.share.connect.posit.cloud/).
 
+El reporte completo puede consultarse en el documento [reporte.html](reporte.html), el cual fue renderizado a partir de [reporte.Rmd](reporte.Rmd).
+
 Autores de este proyecto:
 
 - Betancourt Peralta Diego
