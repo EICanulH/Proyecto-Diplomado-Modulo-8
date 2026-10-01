@@ -151,7 +151,8 @@ tasa_general <- mean(datos_eda$SEVERO)
 
 # descripción de variables
 vars_desc <- c(ZONA = "Zona", FRANJA_HORARIA = "Franja horaria", FESTIVO = "Día festivo",
-               SEXO = "Sexo del conductor", ALIENTO = "Aliento alcohólico", REGION = "Región")
+               SEXO = "Sexo del conductor", ALIENTO = "Aliento alcohólico", 
+               REGION = "Región")
 
 factores <- map_dfr(names(vars_desc), function(v) {
   datos_eda %>%
@@ -160,13 +161,9 @@ factores <- map_dfr(names(vars_desc), function(v) {
     mutate(variable = vars_desc[[v]])
 })
 
-
-```
-
-
-```{r , eval = FALSE}
 # MODELO
 
+# Preparación de los datos
 df_modelo <- datos %>%
   mutate(TIPO = if_else(TIPACCID %in% c("Colisión con animal", "Colisión con ferrocarril", "Incendio", "Otro"),
                         "Otro", TIPACCID)) %>%
@@ -190,9 +187,10 @@ idx <- sample(nrow(df_modelo), size = 0.7 * nrow(df_modelo))
 train <- df_modelo[idx, ]
 test <- df_modelo[-idx, ]
 
+# Ajuste del modelo
 modelo <- glm(SEVERO ~ ., data = train, family = binomial)
 
-# RESULTADOS
+# EVALUACIÓN DEL MODELO
 
 # Métricas en el conjunto de prueba con el umbral de 0.2
 prob_test <- predict(modelo, newdata = test, type = "response")
@@ -213,13 +211,33 @@ metricas <- function(prob, real, corte) {
 resultado <- metricas(prob_test, test$SEVERO, umbral) %>%
   mutate(AUC = as.numeric(auc(roc(test$SEVERO, prob_test, quiet = TRUE))))
 
+# Matriz de confusión
+pred_test <- if_else(prob_test >= umbral, 1, 0)
+
+confusion <- tibble(Real = test$SEVERO, Predicho = pred_test) %>%
+  mutate(
+    across(everything(), ~ factor(if_else(.x == 1, "Con víctimas", "Sólo daños"),
+                                  levels = c("Con víctimas", "Sólo daños")))
+  ) %>%
+  count(Real, Predicho) %>%
+  group_by(Real) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(acierto = Real == Predicho)
+
+# Curva ROC
+roc_test <- roc(test$SEVERO, prob_test, quiet = TRUE)
+
 # Cómo cambian las métricas con otros umbrales (para justificar 0.2)
 umbrales <- map_dfr(seq(0.05, 0.60, by = 0.01), ~ metricas(prob_test, test$SEVERO, .x))
 
+# RESULTADOS 
+
 # Razones de momios
-nombres_vars <- c(TIPO = "Tipo de accidente", REGION = "Región", ZONA = "Zona", FRANJA_HORARIA = "Horario",
-                  DIASEMANA = "Día de la semana", FESTIVO = "Día festivo", SEXO = "Sexo",
-                  GRUPO_EDAD = "Edad", ALIENTO = "Aliento alcohólico")
+nombres_vars <- c(TIPO = "Tipo de accidente", REGION = "Región", 
+                  ZONA = "Zona", FRANJA_HORARIA = "Horario",
+                  DIASEMANA = "Día de la semana", FESTIVO = "Día festivo", 
+                  SEXO = "Sexo", GRUPO_EDAD = "Edad", ALIENTO = "Aliento alcohólico")
 
 grupo_vars <- c(TIPO = "Contexto del incidente", REGION = "Espacio", ZONA = "Espacio",
                 FRANJA_HORARIA = "Tiempo", DIASEMANA = "Tiempo", FESTIVO = "Tiempo",
@@ -248,30 +266,22 @@ importancia <- drop1(modelo, test = "LRT") %>%
   filter(clave != "<none>") %>%
   transmute(clave, variable = nombres_vars[clave], grupo = grupo_vars[clave], LRT)
 
+# Probabilidades para distintos escenarios 
+escenarios <- tibble(
+  escenario = c("Perfil base", "+ con motocicleta", "+ de noche", "+ en domingo",
+                "+ conductor de 18 a 24 años", "+ con aliento alcohólico", "+ en zona suburbana"),
+  TIPO = c("Colisión con vehículo automotor", rep("Colisión con motocicleta", 6)),
+  FRANJA_HORARIA = c(rep("Mañana", 2), rep("Noche", 5)),
+  DIASEMANA = c(rep("Lunes", 3), rep("Domingo", 4)),
+  GRUPO_EDAD = c(rep("de 25 a 44", 4), rep("de 18 a 24", 3)),
+  ALIENTO = c(rep("No", 5), rep("Sí", 2)),
+  ZONA = c(rep("Urbana en intersección", 6), "Suburbana"),
+  REGION = "Noroeste", FESTIVO = "No", SEXO = "Hombre"
+  )
+
+escenarios$prob <- predict(modelo, newdata = escenarios, type = "response")
+
 ```
-
-<!--
-**Contenido:**
-
-El entregable es un reporte breve que explique el proyecto:
-
--Problema y contexto
--Pregunta principal
--Datos y procedencia
--Alcance
-
-Principales decisiones de limpieza
-Metodología
-Modelo
-Principales resultados
-
--Conclusiones
--Limitaciones
--Posibles extensiones
-
-Se deben enfocar en qué hicieron, por qué lo hicieron y qué aprendieron.
--->
-
 
 # Resumen Ejecutivo
 
@@ -315,7 +325,7 @@ Consideraremos como accidentes con víctimas aquellos que registraron **al menos
 
 **Alcance geográfico**: Toda la República Mexicana.
 
-# Datos y procedencia
+# Datos y Procedencia
 
 **Fuente principal:** 
 
@@ -441,7 +451,6 @@ Las siguientes variables registran el número de personas muertas o heridas seg�
 + Agrupamos la edad del conductor presunto responsable en rangos en la variable `GRUPO_EDAD`: de 12 a 17, de 18 a 24, de 25 a 44, de 45 a 64 y de 65 y más. Además de dos categorías para los casos en que el conductor se fugó o su edad no fue especificada.
 
 + Creamos las variables `NUM_VEHICULOS`, `MUERTOS` y `HERIDOS` que contabilizan el total de vehículos involucrados, el total de personas fallecidas y el total de personas heridas por accidente.
-
 
 # Análisis Exploratorio
 
@@ -604,7 +613,7 @@ Como modelo se ajustó una **regresión logística**, que estima la probabilidad
 
 # Modelo
 
-**Preparación para el modelo**:
+## Ajuste del modelo
 
 Ajustamos un solo modelo de regresión logística. Incluye el tipo de accidente, la región, la zona, la franja horaria, el día de la semana, si fue día festivo, el sexo del conductor, el grupo de edad del conductor y si hubo presencia de aliento alcohólico en el conductor.
 
@@ -616,13 +625,30 @@ Ajustamos un solo modelo de regresión logística. Incluye el tipo de accidente,
 
 + **Categorías de referencia**: Colisión con vehículo automotor, región Noroeste (tiene muchos registros y una tasa cercana al promedio), zona urbana en intersección, mañana, lunes, día no festivo, hombre, de 25 a 44 años y sin aliento alcohólico.
 
-**Ajuste del modelo**
-
 El modelo es:
 
 $$\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \sum_k \beta_k x_{ik}, \qquad p_i = P(\text{SEVERO}_i = 1 \mid x_i),$$
 
 donde las $x_{ik}$ son indicadoras de las categorías de cada factor. Cada coeficiente se traduce en una razón de momios $e^{\beta_k}$ frente a la categoría de referencia.
+
+```{r}
+summary(modelo)$coefficients %>%
+  as.data.frame() %>%
+  rownames_to_column("termino") %>%
+  filter(str_detect(termino, "^TIPO")) %>%
+  transmute(termino, beta = Estimate, 
+            error_estandar = `Std. Error`, OR = exp(Estimate)) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 2))) %>%
+  kable(
+    col.names = c("Término", "Beta (β)", "Error Estándar", "Odds Ratio (OR)"),
+    align = "lrrr",
+    caption = "Coeficientes del tipo de accidente"
+  )
+```
+
+El 100% de los accidentes de tipo **Atropellamientos y caídas de pasajero** tiene víctimas. El modelo intenta que su probabilidad llegue a 1 y el coeficiente se va a infinito; R se detiene en un número muy grande (alrededor de 19) con un error estándar todavía más grande. A esto se le llama **separación completa**. Por eso sus razones de momios (cientos de millones) no se pueden interpretar: lo único que nos dicen es que esos accidentes siempre tienen víctimas. Los demás coeficientes no se ven afectados.
+
+## Evaluación del rendimiento
 
 **Evaluación con un umbral de decisión de 0.2**
 
@@ -642,11 +668,164 @@ Medimos en el conjunto de prueba:
 
 No usamos la exactitud (accuracy): como solo uno de cada cinco accidentes tiene víctimas, un modelo que siempre predice "sólo daños" acertaría 82% de las veces sin detectar un solo accidente grave.
 
-# Principales resultados
+```{r}
+resultado %>%
+  mutate(across(recall:especificidad, ~ percent(.x, accuracy = 0.1)),
+         AUC = round(AUC, 3)) %>%
+  kable(
+    caption = "Métricas en el conjunto de prueba con el umbral de 0.2"
+  )
+```
+
+**Matriz de confusión**
+
+```{r}
+ggplot(confusion, aes(x = Predicho, y = fct_rev(Real), fill = acierto)) +
+  geom_tile(color = "white", linewidth = 2) +
+  geom_text(aes(label = paste0(comma(n), "\n(", percent(prop, accuracy = 0.1), ")")), size = 5) +
+  scale_fill_manual(values = c(`TRUE` = "#cde2fb", `FALSE` = "#fbd9cc"), guide = "none") +
+  labs(title = "Matriz de confusión en el conjunto de prueba",
+       subtitle = "Umbral de 0.2. El porcentaje es sobre el total de cada fila (lo real)",
+       x = "Predicho por el modelo", y = "Real") +
+  tema +
+  theme(panel.grid = element_blank())
+```
+
+**Interpretación:**
+
++ De los 19,594 accidentes con víctimas en el conjunto de prueba, el modelo detecta 13,913 y se le escapan 5,681.
+
++ A cambio, 16,465 accidentes de sólo daños se marcan como "con víctimas" (falsas alarmas). Es el costo de usar un umbral bajo para priorizar el recall.
+
+**Curva ROC**
+
+```{r}
+ggroc(roc_test, color = azul, linewidth = 0.9) +
+  geom_abline(intercept = 1, slope = 1, color = "grey70") +
+  annotate("point", x = resultado$especificidad, y = resultado$recall, color = naranja, size = 4) +
+  annotate("text", x = resultado$especificidad - 0.03, y = resultado$recall - 0.05, hjust = 0,
+           label = paste0("Umbral 0.2\nrecall ", percent(resultado$recall, accuracy = 0.1),
+                          "\nespecificidad ", percent(resultado$especificidad, accuracy = 0.1))) +
+  labs(title = paste0("Curva ROC (AUC = ", round(resultado$AUC, 3), ")"),
+       subtitle = "Entre más se acerca la curva a la esquina superior izquierda, mejor distingue el modelo",
+       x = "Especificidad", y = "Sensibilidad (recall)") +
+  tema
+```
+
+**¿Qué pasa con otros umbrales?**
+
+Bajar el umbral detecta más accidentes con víctimas (sube el recall) a cambio de más falsas alarmas (baja la precisión). Subirlo hace lo contrario.
+
+```{r}
+# Métricas del modelo según el umbral de decisión
+map_dfr(seq(0.05, 0.6, by = 0.01), ~ metricas(prob_test, test$SEVERO, .x)) %>%
+  select(umbral, Recall = recall, `Precisión` = precision, Especificidad = especificidad) %>%
+  pivot_longer(-umbral, names_to = "metrica", values_to = "valor") %>%
+  ggplot(aes(x = umbral, y = valor, color = metrica)) +
+  geom_vline(xintercept = umbral, color = "grey40", linetype = "dashed") +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = c(Recall = azul, `Precisión` = naranja, Especificidad = aqua)) +
+  scale_y_continuous(labels = percent, limits = c(0, 1)) +
+  labs(title = "Métricas del modelo según el umbral de decisión",
+       subtitle = "La línea punteada es el umbral que usamos (0.2)",
+       x = "Umbral de decisión", y = NULL, color = NULL) +
+  tema +
+  theme(legend.position = "top")
+```
 
 
++ Con un umbral de 0.2 el modelo detecta 71.0% de los accidentes con víctimas (recall). De los que marca con víctimas, 45.8% sí las tuvieron (precisión), e identifica bien 81.6% de los accidentes con sólo daños (especificidad). El AUC es de 0.829.
+
++ Si usáramos 0.5, el recall bajaría a 28.2%: el modelo dejaría pasar casi tres de cada cuatro accidentes con víctimas.
+
++ Parte del buen desempeño viene de los atropellamientos y las caídas de pasajero, que el modelo acierta siempre porque siempre tienen víctimas.
+
+# Principales Resultados
+
+## 1. ¿Qué factores se relacionan con los accidentes con víctimas?
+
+Pasamos los coeficientes a razones de momios (OR) con `exp()`. Un OR mayor a 1 quiere decir que esa categoría tiene más probabilidad de terminar con víctimas que la categoría de referencia, dejando fijo lo demás. Los intervalos son de 95%.
+
+Quitamos la fila de "Se fugó" en la edad porque es la que R no estimó (`NA`), y los atropellamientos y las caídas de pasajero porque su OR no se puede interpretar (separación completa).
+
+```{r}
+# Gráfico: Factores asociados a accidentes con víctimas
+ors %>%
+  filter(!categoria %in% siempre_victimas) %>%
+  mutate(efecto = case_when(li > 1 ~ "Aumenta la probabilidad",
+                            ls < 1 ~ "Disminuye la probabilidad",
+                            TRUE ~ "Sin diferencia clara")) %>%
+  ggplot(aes(x = OR, y = reorder(etiqueta, OR), color = efecto)) +
+  geom_vline(xintercept = 1, color = "grey50") +
+  geom_pointrange(aes(xmin = li, xmax = ls), size = 0.35) +
+  scale_x_log10(breaks = c(0.5, 0.75, 1, 1.5, 2, 3, 5, 10, 20)) +
+  scale_color_manual(values = c(`Aumenta la probabilidad` = rojo,
+                                `Disminuye la probabilidad` = azul,
+                                `Sin diferencia clara` = gris)) +
+  labs(title = "Factores asociados a accidentes con víctimas",
+       subtitle = "Razón de momios e intervalo de 95% frente a la categoría de referencia. Escala logarítmica.\nSin atropellamientos ni caídas de pasajero (siempre tienen víctimas)",
+       x = "Razón de momios", y = NULL, color = NULL) +
+  tema +
+  theme(legend.position = "top")
+```
+
+**Interpretación**:
+
++ **Tipo de accidente**: frente a un choque entre vehículos, los momios de tener víctimas son 17.8 veces mayores en un choque con ciclista, 10.6 veces en una volcadura y 8.4 veces en un choque con motocicleta. Las salidas del camino (2.8) y los choques con objeto fijo (1.7) también aumentan el riesgo.
++ **Zona**: en zona suburbana los momios casi se duplican frente a una intersección urbana (OR = 1.95).
++ **Conductor**: el aliento alcohólico aumenta los momios en 69% (OR = 1.69). Los conductores de 12 a 17 años (1.52), de 18 a 24 (1.17) y de 65 o más (1.15) tienen más riesgo que los de 25 a 44. Cuando el aliento "se ignora" el riesgo también es mayor (1.21): la falta de información no es aleatoria.
++ **Momento**: efectos pequeños pero significativos: madrugada (1.13), noche (1.11), domingo (1.17) y días festivos (1.24).
++ **Región**: al comparar accidentes con las mismas características, el Sureste deja de destacar (OR = 1.00 frente al Noroeste): su alta proporción de accidentes con víctimas se explica sobre todo porque tiene más choques de motocicleta. El Noreste (0.48) y el Centro (0.50) sí mantienen un riesgo claramente menor, que puede reflejar tanto condiciones viales como diferencias en el registro.
++ **Sexo**: en el análisis exploratorio las conductoras tienen menos accidentes con víctimas (15.7% contra 18.3%), pero al controlar por los demás factores su riesgo es ligeramente mayor (OR = 1.08). La diferencia descriptiva se debe a que tienen otro tipo de accidentes.
 
 
+## 2. ¿Qué factores pesan más?
+
+Con `drop1()` quitamos una variable a la vez y medimos cuánto empeora el modelo (prueba de razón de verosimilitudes). Entre más grande el número, más importante es la variable.
+
+```{r}
+# Gráfico: Importancia de cada variable 
+ggplot(importancia, aes(x = LRT, y = reorder(variable, LRT))) +
+  geom_col(fill = azul, width = 0.7) +
+  geom_text(aes(label = comma(LRT, accuracy = 1)), hjust = -0.15, size = 3.5) +
+  scale_x_continuous(labels = comma, limits = c(0, 63000), expand = c(0, 0)) +
+  labs(title = "El tipo de accidente es por mucho el factor que más pesa",
+       subtitle = "Cuánto empeora el modelo si se quita cada variable (estadístico de razón de verosimilitudes)",
+       x = NULL, y = NULL) +
+  tema
+```
+
+**Interpretación:** El tipo de accidente pesa por mucho más que cualquier otra variable (54,505, más de 20 veces lo que aporta la región, 2,422). Le siguen la zona (851), el aliento alcohólico (461) y la edad (421). El horario, el día de la semana, el sexo y los días festivos pesan mucho menos, aunque todas las variables son significativas.
+
+
+## 3. ¿Qué aporta el modelo?
+
+Partimos de un accidente típico en la región Noroeste y vamos agregando factores de riesgo uno por uno para ver cómo sube la probabilidad de que haya víctimas y cómo lo clasifica el modelo con el umbral de 0.2.
+
+```{r}
+# Gráfico: Probabilidad de víctimas según el modelo
+escenarios %>%
+  mutate(escenario = fct_rev(fct_inorder(escenario))) %>%
+  ggplot(aes(x = prob, y = escenario)) +
+  geom_col(fill = azul, width = 0.7) +
+  geom_vline(xintercept = umbral, color = naranja, linetype = "dashed") +
+  geom_text(aes(label = percent(prob, accuracy = 0.1)), hjust = -0.15, size = 3.8) +
+  scale_x_continuous(labels = percent, limits = c(0, 1), expand = c(0, 0)) +
+  labs(title = "Los factores de riesgo se acumulan",
+       subtitle = "Probabilidad de víctimas según el modelo; la línea naranja es el umbral de 0.2. Perfil base: choque entre vehículos\nen intersección urbana de la región Noroeste, lunes en la mañana, conductor hombre de 25 a 44 años sin aliento alcohólico",
+       x = NULL, y = NULL) +
+  tema
+```
+
+**Interpretación**:
+
++ Con el perfil base (choque entre vehículos) la probabilidad de víctimas es de 7.5% y el modelo lo clasifica como sólo daños.
+
++ El salto más grande lo da el tipo de accidente: con solo cambiarlo a choque con motocicleta la probabilidad sube a 40.3%, más de cinco veces.
+
++ El aliento alcohólico (+12.8 puntos) y la zona suburbana (+13.8) son los factores que más suman después; la noche, el domingo y el conductor de 18 a 24 años agregan de 2 a 4 puntos cada uno. Combinados, llegan a 77.2%.
+
++ Los puntos que suma cada factor dependen del orden en que se agregan, porque los efectos del modelo se multiplican en los momios.
 
 # Conclusiones
 
@@ -670,7 +849,7 @@ Sobre las preguntas secundarias:
 
 + **Registro administrativo heterogéneo**: Cada entidad puede registrar los accidentes de forma distinta (por ejemplo, reportar o no los choques menores), lo que afecta las comparaciones regionales. Además, la clase del accidente se registra con la información del lugar del accidente, por lo que no captura muertes posteriores.
 
-# Posibles extensiones
+# Posibles Extensiones
 
 + Modelar la severidad con más detalle: Clasificación en tres clases (fatal, no fatal, sólo daños) o predecir el número de víctimas con modelos de regresión.
 
