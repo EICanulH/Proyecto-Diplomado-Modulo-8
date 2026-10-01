@@ -4,7 +4,7 @@ De acuerdo con la estadística [Accidentes de Tránsito Terrestre en Zonas Urban
 
 El presente análisis tiene como objetivo **identificar los factores asociados a la severidad de los accidentes de tránsito** causados por **conductores** mediante el desarrollo y comparación de **modelos de clasificación supervisada**, a partir de variables temporales, geográficas, contextuales del incidente y del conductor responsable, contenidas en la edición 2025 de la ATUS. Para ello, la severidad se define como una variable binaria que distingue entre los accidentes con al menos una persona lesionada o fallecida y aquellos que resultaron únicamente en daños materiales.
 
-Los datos descargados se encuentran en la carpeta [datos](datos) de este repositorio. El archivo [cat_region.csv](datos\cat_region.csv) de esta carpeta es de elaboración propia.
+Los datos descargados se encuentran en la carpeta [datos](datos) de este repositorio. El archivo [cat_region.csv](datos/cat_region.csv) de esta carpeta es de elaboración propia.
 
 En el script [analisis_completo.R](analisis_completo.R) se presenta todo el análisis realizado durante este proyecto, el cual incluye la exploración visual y estructural de los datos, su transformación y uso en el entrenamiento del modelo, así como la cuantificación, utilizando el modelo, del impacto que los factores tienen sobre la severidad.
 
