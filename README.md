@@ -1,4 +1,4 @@
-# Proyecto Módulo 8
+# Proyecto del Módulo 8
 
 Fuente de los datos: del INEGI. Se trabajo con el archivo , en particular con los datos de 2025.
 
