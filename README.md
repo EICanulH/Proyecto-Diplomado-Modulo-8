@@ -13,3 +13,11 @@ En el script [analisis_completo.R](analisis_completo.R) se presenta todo el aná
 El script [preparar_datos.R](preparar_datos.R) contiene el procesamiento de los datos utilizados para el dashboard de shiny. Estos datos procesados se guardan en la carpeta [datos_dashboard](datos_dashboard).
 
 El dashboard se construye con el script [app.R][app.R]. En este se presentan diversas visualizaciones descriptivas de los datos, así como los resultados y conclusiones obtenidos con el modelo. El dashboard esta hosteado en [Posit Connect Cloud](https://connect.posit.cloud/) y puede explorarse en este [link].
+
+Autores de este proyecto:
+
+- Betancourt Peralta Diego
+- Canul Hernández Erick Iván
+- Gutiérrez Gutiérrez José Omar
+- Hernández Pérez Maximiliano
+- Torres Vargas Brenda Poulette
