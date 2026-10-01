@@ -3,3 +3,5 @@
 *.code-workspace
 rsconnect/
 .Rhistory
+*_cache/
+*_files/
